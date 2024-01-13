@@ -23,7 +23,7 @@ def write_input_data(event, context):
         {
             "timestamp": clock,  # Timestamp
             "tag": '227FC001.PV',  # Identification
-            "value": 207,  # Adjust based on the actual data in the Pub/Sub message
+            "value": 207,  # Constant value for simulation purpose.
         }
     ]
 

@@ -9,9 +9,9 @@ def configure_scheduler():
     parent = "projects/apt-entropy-410721/locations/us-central1"  # Replace with your project and location
 
     # Schedule data insertion task
-    topic_name = "projects/apt-entropy-410721/topics/write_data_to_bq-topic"  # Correct format
+    topic_name = "projects/apt-entropy-410721/topics/write_data_to_bq-topic"  # Replace with your tapic name
     job = {
-        "name": f"{parent}/jobs/data-insertion-job",
+        "name": f"{parent}/jobs/data-insertion-job", 
         "schedule": "every 1 hours",
         "pubsub_target": {
             "topic_name": topic_name,
