@@ -1,0 +1,26 @@
+gcloud functions deploy write_input_data ^
+    --runtime python310 ^
+    --trigger-event providers/cloud.pubsub/eventTypes/topic.publish ^
+    --trigger-resource write_data_to_bq-sub ^
+    --allow-unauthenticated
+
+
+gcloud functions deploy ml_simulation_function ^
+    --runtime python310 ^
+    --trigger-event providers/cloud.pubsub/eventTypes/topic.publish ^
+    --trigger-resource ml_simulation-topic ^
+    --allow-unauthenticated
+
+
+gcloud scheduler jobs create http write_to_bigquery ^
+    --schedule "0 * * * *" ^
+    --uri YOUR_CLOUD_FUNCTION_URL ^
+    --http-method POST
+
+
+gcloud pubsub subscriptions create write_data_to_bq-sub-subscription ^
+    --topic=write_data_to_bq-sub
+
+
+gcloud pubsub subscriptions create ml_simulation-topic-subscription ^
+    --topic=ml_simulation-topic
