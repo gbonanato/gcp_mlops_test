@@ -1,26 +1,44 @@
-gcloud functions deploy write_input_data ^
-    --runtime python310 ^
-    --trigger-event providers/cloud.pubsub/eventTypes/topic.publish ^
-    --trigger-resource write_data_to_bq-sub ^
-    --allow-unauthenticated
+gcloud auth login
 
+# Enables API's
+gcloud services enable bigquery.googleapis.com
+gcloud services enable pubsub.googleapis.com
+gcloud services enable cloudfunctions.googleapis.com
+gcloud services enable cloudscheduler.googleapis.com
+gcloud services enable cloudbuild.googleapis.com
 
-gcloud functions deploy ml_simulation_function ^
-    --runtime python310 ^
-    --trigger-event providers/cloud.pubsub/eventTypes/topic.publish ^
-    --trigger-resource ml_simulation-topic ^
-    --allow-unauthenticated
+# BigQuery commands
+bq mk IndustrialDataset  # creates dataset
 
+bq mk --table ^
+  --schema timestamp:TIMESTAMP,tag:STRING,value:FLOAT ^
+IndustrialDataset.InputTable  # creates InputTable with schema
 
-gcloud scheduler jobs create http write_to_bigquery ^
-    --schedule "0 * * * *" ^
-    --uri YOUR_CLOUD_FUNCTION_URL ^
-    --http-method POST
+bq mk --table ^
+  --schema timestamp:TIMESTAMP,tag:STRING,value:FLOAT,prediction:FLOAT ^
+IndustrialDataset.TablePrediction  # creates TablePrediction with schema
 
+# Pub/Sub commands
+gcloud pubsub topics create write_data_to_bq-topic  # Creates topic
+gcloud pubsub subscriptions create write_data_to_bq-sub ^  # Creates subscription
+    --topic=write_data_to_bq-topic  # Select topic to subscription
 
-gcloud pubsub subscriptions create write_data_to_bq-sub-subscription ^
-    --topic=write_data_to_bq-sub
+gcloud pubsub topics create ml_simulation-topic  # Creates topic
+gcloud pubsub subscriptions create ml_simulation-topic-subscription ^  # Creates subscription
+--topic=ml_simulation-topic  # Selects topic to subscription
 
+# Deploys cloud function
+gcloud functions deploy write_input_data ^  # Deploys function 'write_input_data'
+    --runtime python310 ^  # Defines Python 3.10 for function runtime
+    --trigger-event providers/cloud.pubsub/eventTypes/topic.publish ^  # Determines function trigger as menssage published to topic
+    --trigger-resource write_data_to_bq-topic ^  # Defines 'write_data_to_bq-topic' as trigger topic 
+    --allow-unauthenticated  # Allows unnauthenticated acces to function for ease of use
 
-gcloud pubsub subscriptions create ml_simulation-topic-subscription ^
-    --topic=ml_simulation-topic
+gcloud functions deploy ml_simulation_function ^  # Deploys function 'ml_simulation_function'
+    --runtime python310 ^  # Defines Python 3.10 for function runtime
+    --trigger-event providers/cloud.pubsub/eventTypes/topic.publish ^  # Determines function trigger as menssage published to topic
+    --trigger-resource ml_simulation-topic ^  # Defines 'ml_simulation-topic' as trigger topic
+    --allow-unauthenticated  # Allows unnauthenticated acces to function for ease of use
+
+# Deploys Cloud Scheduler
+python scheduler_config.py  # Runs function to deploy cloud scheduler.
